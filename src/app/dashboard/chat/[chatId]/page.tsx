@@ -1,7 +1,8 @@
+
 const Chat = () => {
   return (
     <div>
-      Chat page
+      id screen
     </div>
   )
 }

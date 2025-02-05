@@ -4,7 +4,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigation } from "@/lib/context/navigation";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, TrashIcon } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Doc, Id } from "../../convex/_generated/dataModel";
+import ChatRow from "./ChatRow";
+
+
 
 
 
@@ -13,13 +19,24 @@ export default function Sidebar() {
     const { isMobileNavOpen, closeMobileNav } = useNavigation();
 
 
+    const chats = useQuery(api.chats.listChats)
+    console.log(chats, 'chats')
+    const createChat = useMutation(api.chats.createChat)
+    const deleteChat = useMutation(api.chats.deleteChat)
+
 
     const handleNewChat = async () => {
-
+        const chatId = await createChat({ title: "new chat" })
+        router.push(`/dashboard/chat/${chatId}`);
+        closeMobileNav()
     };
 
-    const handleDeleteChat = async (id: any) => {
-
+    const handleDeleteChat = async (id: Id<"chats">) => {
+        await deleteChat({ id })
+        if (window.location.pathname.includes(id)) {
+            router.push(`/dashboard`);
+        }
+        closeMobileNav()
     };
 
     return (
@@ -42,13 +59,15 @@ export default function Sidebar() {
                     <Button
                         onClick={handleNewChat}
                         className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/50 shadow-sm hover:shadow transition-all duration-200"
-                    >
+                    > 
                         <PlusIcon className="mr-2 h-4 w-4" /> New Chat
                     </Button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-2.5 p-4 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                    <p>Chats</p>
+                    {chats?.map((chat) => (
+                        <ChatRow key={chat._id} chat={chat} onDelete={handleDeleteChat} />
+                    ))}
                 </div>
             </div>
         </>
